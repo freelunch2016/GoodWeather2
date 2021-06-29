@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.goodweather.android.MainActivity
 import com.goodweather.android.R
 import com.goodweather.android.ui.weather.WeatherActivity
 import com.goodweather.android.util.toastShow
@@ -23,9 +24,9 @@ class PlaceFragment : Fragment() {
         ViewModelProvider(this).get(PlaceViewModel::class.java)
     }
 
-    private lateinit var adapter: PlaceAdapter
+    lateinit var adapter: PlaceAdapter
     private lateinit var recyclerView :RecyclerView
-    private lateinit var searchPlaceEdit :EditText
+    lateinit var searchPlaceEdit :EditText
     private lateinit var bgImageView :ImageView
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -42,7 +43,7 @@ class PlaceFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         //如果已保存过地址，就直接打开天气界面
-        if (viewModel.isPlaceSaved()){
+        if (activity is MainActivity && viewModel.isPlaceSaved()){
             val place = viewModel.getSavedPlace()
             val intent = Intent(context, WeatherActivity::class.java).apply {
                 putExtra("location_lat",place.location.lat)

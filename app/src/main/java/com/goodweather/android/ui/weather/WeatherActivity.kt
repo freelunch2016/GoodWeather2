@@ -1,18 +1,24 @@
 package com.goodweather.android.ui.weather
 
+import android.content.Context
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
+import android.view.inputmethod.InputMethodManager
 import android.widget.*
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
+import androidx.drawerlayout.widget.DrawerLayout.DrawerListener
 import androidx.lifecycle.ViewModelProvider
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.goodweather.android.R
 import com.goodweather.android.logic.model.Weather
 import com.goodweather.android.logic.model.getSky
+import com.goodweather.android.ui.place.PlaceFragment
 import com.goodweather.android.util.toastShow
 import java.text.SimpleDateFormat
 import java.util.*
@@ -22,7 +28,7 @@ import java.util.*
  */
 class WeatherActivity : AppCompatActivity() {
 
-    private val viewModel by lazy {
+    val viewModel by lazy {
         ViewModelProvider(this)[WeatherViewModel::class.java]
     }
 
@@ -40,15 +46,19 @@ class WeatherActivity : AppCompatActivity() {
 
     private lateinit var weatherLayout: ScrollView
 
+    private lateinit var swipeRefresh: SwipeRefreshLayout
+
+    private lateinit var navBtn: Button
+    lateinit var drawerLayout: DrawerLayout
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //设置沉浸式界面,让背景图和状态栏融为一体
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.setDecorFitsSystemWindows(false)
         } else {
-//这个代码沉浸式 可以
+            //这个代码沉浸式 可以
             window.clearFlags(
                 WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS
                         or WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION
@@ -88,6 +98,9 @@ class WeatherActivity : AppCompatActivity() {
         ultravioletText = findViewById(R.id.ultravioletText)
         carWashingText = findViewById(R.id.carWashingText)
 
+        swipeRefresh = findViewById(R.id.swipeRefresh)
+        navBtn = findViewById(R.id.navBtn)
+        drawerLayout = findViewById(R.id.drawerLayout)
 
 
         viewModel.weatherLiveData.observe(this, {
@@ -98,9 +111,47 @@ class WeatherActivity : AppCompatActivity() {
                 "无法成功获取天气信息".toastShow()
                 it.exceptionOrNull()?.printStackTrace()
             }
+            swipeRefresh.isRefreshing = false
         })
-        viewModel.refreshWeather(viewModel.locationLng, viewModel.locationLat)
+        refreshWeather()
 
+        swipeRefresh.setColorSchemeResources(R.color.colorPrimary)
+        swipeRefresh.setOnRefreshListener {
+            refreshWeather()
+        }
+
+        navBtn.setOnClickListener {
+            drawerLayout.openDrawer(GravityCompat.START)
+        }
+        drawerLayout.addDrawerListener(object : DrawerListener {
+            override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
+            }
+
+            override fun onDrawerOpened(drawerView: View) {
+            }
+
+            override fun onDrawerClosed(drawerView: View) {
+                val manager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                manager.hideSoftInputFromWindow(
+                    drawerView.windowToken,
+                    InputMethodManager.HIDE_NOT_ALWAYS
+                )
+                val fragment = supportFragmentManager.findFragmentById(R.id.placeFragment) as PlaceFragment
+                fragment.viewModel.placeList.clear()
+                fragment.adapter.notifyDataSetChanged()
+                fragment.searchPlaceEdit.text.clear()
+            }
+
+            override fun onDrawerStateChanged(newState: Int) {
+            }
+        })
+    }
+
+
+
+    fun refreshWeather() {
+        viewModel.refreshWeather(viewModel.locationLng, viewModel.locationLat)
+        swipeRefresh.isRefreshing = true
     }
 
 
@@ -150,6 +201,5 @@ class WeatherActivity : AppCompatActivity() {
         weatherLayout.visibility = View.VISIBLE
 
     }
-
 
 }

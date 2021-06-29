@@ -3,12 +3,10 @@ package com.goodweather.android.logic
 import androidx.lifecycle.liveData
 import com.goodweather.android.logic.dao.PlaceDao
 import com.goodweather.android.logic.model.Place
-import com.goodweather.android.logic.model.PlaceResponse
 import com.goodweather.android.logic.model.Weather
 import com.goodweather.android.logic.network.GoodWeatherNetWork
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlin.coroutines.suspendCoroutine
 
 
 /**
@@ -28,7 +26,7 @@ object Repository {
                 Result.failure(RuntimeException("response status is ${placeResponse.status}"))
             }
         } catch (e: Exception) {
-            Result.failure<List<Place>>(e)
+            Result.failure(e)
         }
 
         emit(result)
